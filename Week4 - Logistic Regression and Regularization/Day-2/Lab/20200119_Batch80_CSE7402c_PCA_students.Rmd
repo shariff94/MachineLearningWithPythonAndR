@@ -1,0 +1,168 @@
+
+```{r}
+
+rm(list = ls(all=TRUE))
+
+```
+
+
+* Read in the data
+
+```{r}
+iris_data <- iris
+
+```
+
+
+
+* Get the structure and summary of the data
+
+* The data has 5 attributes and 150 rows
+
+```{r}
+
+str(iris_data)
+
+summary(iris_data)
+
+```
+
+Running the multiclass classification model on the iris dataset
+
+```{r}
+
+library(nnet)
+
+multinom_model = multinom(Species~., data = iris_data )
+
+
+pred_results = multinom_model$fitted.values
+
+
+actl_results = iris_data$Species
+
+
+results = data.frame("pred_spec" = colnames(pred_results)[apply(pred_results,1,function(x) which(x==max(x)))], 
+                     "act_spec" = iris_data$Species)
+
+table(results)
+
+
+```
+
+
+
+## Linear Separability in the data
+
+* Compute the variance of each variable in the dataset
+
+* Plot the data across the two variables with the highest variance
+
+```{r}
+
+# Using lapply() function we apply the var() function on each of the variables excluding the target
+
+lapply(iris_data[, -5], var)
+
+# Plot the data points on the axes with the highest variances
+
+plot(iris_data$Sepal.Length, iris_data$Petal.Length, col = iris_data$Species, xlab = "Sepal Length", ylab = "Petal Length",
+    main = "Linear Separability before PCA")
+
+
+
+```
+
+* From the above plot it is visible that the data cannot be linearly separated by just using two axes, that too the ones with the highest variance
+
+
+Automated approach to implement the Principle components (as below).
+
+```{r}
+
+pca_princomp <- princomp(iris_data[,-c(5)])
+summary(pca_princomp)
+pca_princomp$loadings
+head(pca_princomp$scores)
+plot(pca_princomp)
+
+iris_pca_data = data.frame(pca_princomp$scores, Species = iris_data$Species)
+
+plot(iris_pca_data$Comp.1, iris_pca_data$Comp.2, col = iris_pca_data$Species, xlab = "Principal Component 1", ylab = "Principal Component 2",  main = "Linear Separability after PCA")
+
+
+reg_mod_2 = multinom(Species~., data = iris_pca_data )
+
+pred_results_2 = reg_mod_2$fitted.values
+
+
+actl_results_2 = iris_pca_data$Species
+
+
+results_prcom = data.frame("pred_spec" = colnames(pred_results_2)[apply(pred_results_2,1,function(x) which(x==max(x)))], 
+                     "act_spec" = iris_pca_data$Species)
+
+table(results_prcom)
+
+```
+
+PCA with scaled data
+```{r }
+
+
+
+```
+
+# Data Pre-processing
+
+## Split the data into train and test
+
+```{r}
+
+
+
+```
+
+
+# Automated Computation of Principal Components
+
+
+
+## Sclaed PCA computation
+
+
+
+```{r}
+
+pca_scaled <- princomp(train_data[, !(names(train_data) %in% c("Species"))], cor = T)
+
+head(pca_scaled$scores)
+
+```
+
+* Plot the variance along each of the principal components
+
+* We can now see that the dominance of the variance along the first principal component has reduced significantly
+
+```{r}
+
+plot(pca_scaled)
+
+```
+
+
+* Hence scaling the data before PCA, is extremely important as the higher range of one variable might unfairly influence the principal components
+
+# Apply PCA on the Original Data
+
+* Project the train and test data sets onto the derived principal components
+
+```{r}
+
+train_pca_e <- as.data.frame(predict(pca_scaled, train_data[, !(names(train_data) %in% c("Species"))]))
+
+
+
+```
+
+

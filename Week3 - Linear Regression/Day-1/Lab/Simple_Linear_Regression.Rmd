@@ -1,0 +1,334 @@
+---
+title: "Simple Linear Regression"
+author: "INSOFE"
+date: "11th January, 2020"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+## Simple Linear Regression Model
+
+### Clear environment variables
+
+```{r}
+rm(list=ls(all=TRUE))
+
+```
+
+## Agenda 
+
+* Problem Statement
+
+* Understand the data
+
+* Explore the data
+
+* Clean and Process the Data
+
+* Model the data
+
+* Evaluation and Communication
+
+## Problem Statement
+
+* We have provided a dataset with some details about cars. You are expected to build a linear regression model for the age and the price columns.
+
+### Define the independent and dependent variables
+
+- In Linear Regression, the dependent variable is continuous variable.
+- For Simple Linear Regression we need one dependent and one independent variable
+- For this example, we will consider the Price as dependent variable and the Age of the car as the independent variable.
+
+### Reading & understanding the data
+
+```{r}
+cars_data = read.csv(file="Toyota_SimpleReg.csv", header=T)   # Read the data from cars.csv file
+dim(cars_data)
+```
+* Perform Exploratory Data Analysis:
+
+```{r}
+
+colnames(cars_data)     # Display the column names
+str(cars_data)          # Structure of the dataset
+nrow(cars_data)         # Number of rows in the dataset
+ncol(cars_data)         # Number of columns in the dataset
+summary(cars_data)      # Summary of the dataset
+```
+
+## Look for Missing Values
+```{r}
+sum(is.na(cars_data))
+
+```
+
+
+## Data Pre-Processing
+```{r}
+## Drop the Id, Model attributes:
+
+drop_cols <- c("Id","Model")
+cars_data[drop_cols] <- NULL
+str(cars_data)
+
+```
+
+### Rename Age Column
+```{r}
+colnames(cars_data)[2] <- 'Age'
+str(cars_data)
+
+```
+
+## Scatter Plot
+
+* Plot the Dependent and  Independent variables
+
+- The type of plot used to see the relationship between two continuous variables is called as _*Scatter Plot*_
+
+```{r}
+
+# Plot the dependent and independent variables
+
+plot(cars_data$Age,cars_data$Price,
+      main = "Price vs. Age",
+     xlab = "Age of the car (months)",
+     ylab = "Price in $")
+```
+
+- What do you infer from the plot?
+
+## Covariance between the attributes
+
+```{r}
+
+cov(cars_data)      # Covariance between independent and dependent variable
+
+```
+* The covariance of the price of the car and age is -59136.11
+
+- What does the value of the covariance signify?
+
+## Correlation between the attributes
+
+```{r}
+
+cor_data = cor(cars_data)      # Correlation between independent and dependent variable
+cor_data
+
+```
+* The correlation coefficient of the price of the car and age is -0.8765905.
+* Since the value is close to 1 and has a -ve sign, we can conclude that the variables are negatively correlated.
+
+## Corrplot
+
+```{r}
+# install.packages("corrplot")
+#method parameter: "circle", "square", "ellipse", "number", "shade", "color", "pie".
+library(corrplot)
+corrplot(cor_data, method = "number")
+
+```
+
+
+## Model Building
+
+### Train Test Split (70:30) - Split the data into train and test datasets
+
+```{r}
+set.seed(123)
+library(caret)
+# p for the portion of data to be used for training
+# list to return the output as list or matrix
+trainIndexC <- createDataPartition(cars_data$Price, p = .7, list = FALSE)
+
+cars_train = cars_data[trainIndexC,] 
+cars_test = cars_data[-trainIndexC,]
+nrow(cars_train)
+nrow(cars_test)
+```
+
+## Building the Linear Regression Model
+
+* lm function is used to fit linear models
+
+```{r}
+
+LinReg = lm(Price ~ Age, data = cars_train)
+coefficients(LinReg)
+
+```
+
+- Summary displays the following: 
+    * Formula given (Call) - Shows the function call used to compute the regression model.
+    * Residuals. Provide a quick view of the distribution of the residuals, which by definition have a mean zero.
+    * Coefficients and the test statistic values. Shows the regression beta coefficients and their statistical significance. Predictor variables, that are significantly associated to the outcome variable, are marked by stars.
+    * Residual Standard Error (RSE)
+    * Multiple R- Squared (which we generally refer to as R squared or Co-efficient of Determination)
+    * F statistic - Test for Model
+    
+  - The statistical hypothesis is as follows :
+  
+    * Null Hypothesis (H0): the coefficients (slope) are equal to zero (i.e., no relationship between x and y)
+    * Alternative Hypothesis (H1): the coefficients (slope) are not equal to zero (i.e., there is some relationship between x and y)
+
+### Read the model summary
+
+```{r}
+## Summary of the linear model
+summary(LinReg)
+
+```
+
+- Try answering these questions (Interpreting model output) -
+    1. Is the Slope significant?
+    2. Is the Model significant?
+    3. What is the predictive power of the model (R-squared)?
+    
+- In our example, both the p-values for the intercept and the predictor variable are highly significant, so we can reject the null hypothesis and accept the alternative hypothesis, which means that there is a significant association between the predictor and the outcome variables.
+
+
+
+## Optional for info : 
+```{r}
+#To extract the coefficients:
+
+coefficients(LinReg)
+coefficients(LinReg)[1]
+coefficients(LinReg)[2]
+
+```
+
+## Extracting residuals and fitted values
+
+```{r}
+
+# To extract the residuals:
+head(LinReg$residuals)
+
+# To extract the predictions
+head(LinReg$fitted.values)
+
+```
+
+## Residual Analysis
+
+* In R four diagnostic plots can be obtained by calling the plot function on fitted model obtained using lm
+
+### Validity of linear regression assumptions
+
+
+```{r}
+
+par(mfrow = c(2,2))                         # par{graphics} helps us to Set the Graphical Parameters
+plot(LinReg, col = 'light green')     # Check for validity of linear regression assumptions
+
+```
+
+
+## Predict on testdata 
+
+```{r}
+test_prediction = predict(LinReg, cars_test)  # Fitted values
+test_actual = cars_test$Price                 # Actual values
+
+```
+
+## Performance Metrics
+
+Once we choose the model, we have to report performance metrics on the test data. We are going to report three error metrics for regression.
+
+### Error Metrics for Regression
+
+* Mean Absolute Error (MAE)
+
+
+Create a function called mae that measures the mean absolute error, given the actual and predicted points.
+
+$$MAE = \dfrac{1}{n}\times\sum_{i = 1}^{n}|y_{i} - \hat{y_{i}}|$$
+```{r}
+
+# We can create a function which would compute the error if we pass on two parameters to it.
+
+mae <- function(actual, predicted){
+  
+  error <- actual - predicted
+  
+  mean(abs(error))
+  
+}
+mae(cars_train$Price, LinReg$fitted.values)
+mae(test_actual, test_prediction)
+```
+
+* Mean Squared Error (MSE)
+
+Create a function called mse that measures the mean squared error, given the actual and predicted points.
+
+$$MSE = \dfrac{1}{n}\times\sum_{i = 1}^{n}(y_{i} - \hat{y_{i}})^2$$
+
+```{r}
+
+mse <- function(actual, predicted){
+  
+  error <- actual - predicted
+  
+  mean(error^2)
+  
+}
+mse(cars_train$Price, LinReg$fitted.values)
+mse(test_actual, test_prediction)
+```
+
+* Root Mean Squared Error (RMSE)
+
+Create a function called rmse that measures the root mean squared error, given the actual and predicted points.
+
+$$RMSE = \sqrt{\dfrac{1}{n}\times\sum_{i = 1}^{n}(y_{i} - \hat{y_{i}})^2}$$
+
+```{r}
+
+rmse <- function(actual, predicted){
+  
+  error <- actual - predicted
+  
+  sqrt(mean(error^2))
+  
+}
+rmse(cars_train$Price, LinReg$fitted.values)
+rmse(test_actual, test_prediction)
+```
+
+$$MAPE = \dfrac{1}{n}\times\sum_{i = 1}^{n}|\dfrac{y_{i} - \hat{y_{i}}}{y_i}|$$
+```{r}
+
+# We can create a function which would compute the MAPE if we pass on two parameters to it.
+
+mape <- function(actual, predicted){
+  
+  error <- (actual - predicted)/actual
+  
+  mean(abs(error))
+  
+}
+mape(cars_train$Price, LinReg$fitted.values)
+mape(test_actual, test_prediction)
+```
+
+
+### Report Performance Metrics
+
+Report performance metrics obtained by using the chosen model on the test data.
+
+```{r}
+library(DMwR)
+#Error verification on train data
+regr.eval(cars_train$Price, LinReg$fitted.values)
+
+#Error verification on test data
+regr.eval(test_actual, test_prediction)
+```
+

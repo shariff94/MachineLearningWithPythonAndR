@@ -1,0 +1,147 @@
+---
+title: "R Functions"
+output: html_document
+---
+
+
+## Looping Functions
+
+We have already seen some common pre-defined functions like mean, max, min etc. We have also seen how to write loops. Now, we will see some looping function that come very handy when a function has to be applied iteratively on an object, while avoiding writing a loop explicitly.
+
+There are 6 such functions, together making the apply family. We will look mainly into the two of them which are the ones you will use the most. For others, there are easier way to get the same result, we will see that later.
+
+1. apply
+2. lapply
+
+### 1. apply
+
+apply function requires three mandatory arguments.
+
+`apply(X, MARGIN, FUN, ...)`
+
+- `X` array or matrix
+- `MARGIN` for a matrix 1 indicates rows, 2 indicates columns, c(1, 2) indicates rows and columns. Where X has named dimnames, it can be a character vector selecting dimension names.
+- `FUN` pre-defined or user-defined function
+- `...` arguments to function
+
+_Apply can return a vector, array or list based on the dimension of value returned from each function call._
+
+Let us use the data frame we created in the last exercise to run a few examples.
+
+```{r}
+English <- c(50, 85, 90)
+Math <- c(38, 65, 65)
+Science <- c(75, 75, 80)
+
+df <- data.frame(English, Math, Science, row.names = c('S1', 'S2', 'S3'))
+df
+```
+
+Apply row-wise
+
+```{r}
+apply(df, 1, min)
+```
+
+```{r}
+apply(df, 1, max)
+```
+
+```{r}
+apply(df, 1, mean)
+```
+
+Apply column-wise
+
+```{r}
+apply(df, 2, min)
+```
+
+```{r}
+apply(df, 2, max)
+```
+
+```{r}
+apply(df, 2, mean)
+```
+
+
+### 2. lapply
+
+lapply takes in a vector or list. Any other object is coerced to list internally.
+
+`lapply(X, FUN, ...)`
+
+It always returns a list.
+
+```{r}
+
+lapply(df, mean) 
+
+```
+
+Can you create a list with different element size and print the length of each element?
+
+```{r}
+
+l <- list(1:3, c(T, F), "Hello")
+
+lapply(l, length)
+
+```
+
+## User-Defined Functions
+
+`function_name <- function(arg_1, arg_2, ...) {`
+`/       Function body `
+`}`
+
+```{r}
+
+stat <- function(x){
+  avg = mean(x)
+  l = min(x)
+  h = max(x)
+  
+  return(data.frame(l, h, avg))
+}
+
+apply(df, 1, stat) 
+
+```
+
+___
+
+### Exercise 1 : `Practice Assignment`
+
+1. Create a function which takes an argument and checks for the object type for each element
+  i. If element is numeric, it square the values.
+  ii. If element is logical, it converts to numeric.
+  iii. If element is character, it converts to lower case.
+  
+2. Use this function for a list using any apply function.  
+
+
+INPUT : 
+
+Use the list we created earlier : 
+`l = list(1:3, c(T, F), "Hello")`
+
+___
+
+```{r}
+
+func1 <- function(v){
+    if (is.numeric(v)) {
+      v = v**2
+    } else if (is.character(v)) {
+      v = tolower(v)
+    } else if (is.logical(v)) {
+      v = as.numeric(v)
+    }
+  return(v)
+}
+
+lapply( list(1:3, c(T, F), "Hello") , func1)
+
+```

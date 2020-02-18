@@ -1,0 +1,247 @@
+---
+title: "Working with Dates"
+output: html_document
+---
+
+
+## Dates and Times
+
+In this exercise, we will learn how to handle date type data. We will use `lubridate` package from the tidyverse set.
+
+We need to run below two commands to use a package.
+- `install.packages()` is only required once to get the binaries on your system. On successful installation, you should see the path where the binaries get stored.
+- `library()` is required everytime you open R Studio, to load the library in R environment.
+
+```{r warning=FALSE, message=FALSE}
+
+ install.packages('lubridate')
+
+library(lubridate)
+
+
+```
+
+
+
+There are three types of date/time data we come accross
+
+  * Date
+  * Time
+  * DateTime
+
+Functions to retrive current data and datetime.
+
+```{r}
+
+# date
+today()
+
+# datetime
+now()
+
+```
+
+It is possible to coerce one type to another.
+
+```{r}
+
+as_datetime(today())
+
+as_date(now())
+
+```
+
+
+Dates often come in string. We have to convert it to correct data type. Lubridate makes that easy. Identify the order in which year, month, and day appear in your dates, then arrange “y”, “m”, and “d” in the same order.
+
+```{r}
+
+dmy("02-Feb-2019")
+
+mdy("February 2nd, 2019")
+
+ymd("2019-02-02")
+
+# numeric also works
+ymd(20190202)
+
+```
+
+To get datetime format, add an underscore and one or more of “h”, “m”, and “s” to the name of the parsing function
+
+```{r}
+
+ymd_hms("2019-02-02 11:54:52")
+
+mdy_hm("11/28/2019 11:54")
+
+```
+
+It is useful to see how each of these date types are defined in R
+
+```{r}
+
+class(today())
+class(ymd("2019-02-02"))
+
+class(now())
+class(ymd_hms("2019-02-02 11:54:52"))
+
+```
+
+POSIXct is the name of datetime type in R.
+
+### Extracting Date components
+
+It is also possible to isolate a component from date/datetime objects. Lets see how to do that by first creating a datetime variable.
+
+```{r}
+
+datetime <- ymd_hms("2019-06-15 11:54:52")
+
+year(datetime)
+month(datetime)
+mday(datetime)  # day of month 
+yday(datetime)  # day of year
+wday(datetime)  # day of week
+hour(datetime)
+minute(datetime)
+second(datetime)
+
+```
+
+month() and wday() have two arguments - label, abbr. Try these and see what they do?
+
+```{r}
+
+month(datetime, label = TRUE)
+month(datetime, label = TRUE, abbr = F)
+
+wday(datetime, label = TRUE)
+wday(datetime, label = TRUE, abbr = F)
+
+```
+
+
+### Setting Date components
+
+```{r}
+
+datetime <- ymd_hms("2019-06-15 11:54:52")
+
+year(datetime) <- 2012
+month(datetime) <- 8
+mday(datetime)  <- 19
+hour(datetime)  <- 5
+minute(datetime)  <- 3
+
+datetime
+
+```
+
+### Arithematic Operations on Dates
+
+```{r}
+
+datetime <- ymd_hms("2019-06-15 11:54:52")
+
+datetime + days(1) + months(3) - years(2) + hours(10) - seconds(20)
+
+class(datetime)
+class(days(1))
+
+```
+
+### Extrcting Date Intervals
+
+When we try to extract the difference in data/datetime objects, tidyverse creates an object of type `difftype`. The problem with this object is it is very ambiguous as it can give the difference in years, months, days, minutes or seconds. Let's see this with an example.
+
+```{r}
+
+class(dmy(25091989) - today()) # check type
+dmy(25091989) - today()
+
+(now() + hours(4)) - now()
+(now() + seconds(4)) - now()
+
+```
+
+We might want to create a feature with the difference in 2 dates features, in our choice of interval. We can create an interval type object and apply `/` and `*` operations on it. Lets see a few examples.
+
+```{r}
+dmy(25091989) %--% today() 
+```
+
+
+```{r}
+# class(dmy(25091989) %--% today()) # check type
+
+dmy(25091989) %--% today() / years(1) 
+dmy(25091989) %--% today() / months(1) 
+
+now() %--% (now() + hours(4)) / hours(1)
+now() %--% (now() + hours(4)) / hours(1) * 2
+
+
+now() %--% (now() + hours(4)) / seconds(1)
+
+
+
+```
+
+___
+
+### Exercise 1 `Practice Assignment`
+
+1. 1. Use the appropriate lubridate function to parse each of the following dates:
+
+  - "January 1, 2010"
+  - "2015-Mar-07"
+  - "06-Jun-2017"
+  - c("August 19 (2015)", "July 1 (2015)")
+  - "12/30/14" # Dec 30, 2014
+  
+2. For given dataframe as input, extract year, month, day, duration from current date (in years).
+
+`data.frame(Dates = c('20190501', '20150302', '19950530'))`
+
+3. Create separate column for each of these.
+
+___
+
+
+```{r}
+
+mdy("January 1, 2010")
+
+ymd("2015-Mar-07")
+
+dmy("06-Jun-2017")
+
+mdy(c("August 19 (2015)", "July 1 (2015)"))
+class(mdy(c("August 19 (2015)", "July 1 (2015)")))
+
+mdy("12/30/14") # Dec 30, 2014
+
+```
+
+
+```{r}
+
+df$Dates <- ymd(df$Dates)
+df['Year'] <- year(df$Dates)
+df['Month'] <- month(df$Dates)
+df['Day'] <- day(df$Dates)
+df
+
+```
+
+```{r}
+
+df['Duration (in years)'] <- df$Dates %--% today() / years(1) 
+df
+
+```
+
+
+
